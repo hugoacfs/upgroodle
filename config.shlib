@@ -1,0 +1,266 @@
+config_read_file() {
+    (grep -E "^${2}=" -m 1 "${1}" 2>/dev/null || echo "VAR=__UNDEFINED__") | head -n 1 | cut -d '=' -f 2-;
+}
+
+config_get() {
+    val="$(config_read_file config.cfg "${1}")";
+    if [ "${val}" = "__UNDEFINED__" ]; then
+        val="$(config_read_file config.cfg.defaults "${1}")";
+    fi
+    printf -- "%s" "${val}";
+}
+
+purge_moodle_versions() {
+    MOODLE_VERSIONS="$(config_get MOODLE_VERSIONS)"
+    if [ ! -d "$MOODLE_VERSIONS" ]
+    then
+        echo "Cannot find $MOODLE_VERSIONS directory, do you wish to create it now?"
+        read -p "(Enter 'y' for yes, 'n' for no) : " confirmcreatedir
+        if [[ $confirmcreatedir != 'y' ]]
+        then
+            echo "Aborting."
+            exit 1 
+        fi
+        echo "Creating dir $MOODLE_VERSIONS ..."
+        mkdir $MOODLE_VERSIONS
+    else
+        echo "Do you really wish to completely purge $MOODLE_VERSIONS directory now?"
+        read -p "(Enter 'y' for yes, 'n' for no) : " confirmremovedir
+        if [[ $confirmremovedir != 'y' ]]
+        then
+            echo "Aborting."
+            exit 1 
+        fi
+        echo "Removing dir $MOODLE_VERSIONS ..."
+        rm -r $MOODLE_VERSIONS
+        echo "Creating dir $MOODLE_VERSIONS ..."
+        mkdir $MOODLE_VERSIONS
+    fi
+    echo "purge_moodle_versions: Done."
+}
+
+get_moodle() {
+    VERSION=$VERSION
+    RELEASE=$RELEASE
+    MOODLE_VERSIONS="$(config_get MOODLE_VERSIONS)"
+    if [ ! -d "$MOODLE_VERSIONS" ]
+    then
+        echo "Cannot find $MOODLE_VERSIONS directory, do you wish to create it now?"
+        read -p "(Enter 'y' for yes, 'n' for no) : " confirmcreatedir
+        if [[ $confirmcreatedir != 'y' ]]
+        then
+            echo "Aborting "
+            exit 1 
+        fi
+        echo "Creating dir $MOODLE_VERSIONS ..."
+        mkdir $MOODLE_VERSIONS
+    fi  
+    echo "get_moodle VERSION=$VERSION"
+    echo "get_moodle RELEASE=$RELEASE"
+
+    STABLE="stable$VERSION"
+    FILE="moodle-latest-$VERSION.tgz"
+    FOLDERNAME="moodle-$VERSION"
+    if [ "$RELEASE" != "" ]
+    then
+        FOLDERNAME="moodle-$VERSION-$RELEASE"
+        FILE="moodle-$RELEASE.tgz"
+        if [ -d "$MOODLE_VERSIONS/$FOLDERNAME" ]; then
+            echo 'Release already available in moodle versions folder, skipping'
+            read -p "(Press Enter to continue) : "
+            PREVENTDOWNLOAD="1"
+        fi
+    else
+        if [ -f "$MOODLE_VERSIONS/$FILE" ]
+        then
+            rm "$MOODLE_VERSIONS/$FILE"
+            rm -R "$MOODLE_VERSIONS/$FOLDERNAME"
+        fi
+    fi
+
+    if [ -z ${PREVENTDOWNLOAD+x} ] && wget "https://download.moodle.org/download.php/direct/$STABLE/$FILE"
+    then
+        if [ -d "$FOLDERNAME" ]; then
+                rm -r "$MOODLE_VERSIONS/$FOLDERNAME"
+        fi
+        
+        if tar -xzf $FILE
+        then
+            mv $FILE "$MOODLE_VERSIONS/$FILE"
+            mv "moodle" "$MOODLE_VERSIONS/$FOLDERNAME"
+            echo "Fixing permissions of unziped folder"
+            find "$MOODLE_VERSIONS/$FOLDERNAME/." -type f -exec chmod 0644 {} \;
+            find "$MOODLE_VERSIONS/$FOLDERNAME/." -type d -exec chmod 0755 {} \;
+            echo "Creating 'latest' directory from '$FOLDERNAME'"
+            if [ -d "$MOODLE_VERSIONS/latest" ]
+            then
+                rm -r "$MOODLE_VERSIONS/latest"
+            fi  
+            cp -r "$MOODLE_VERSIONS/$FOLDERNAME" "$MOODLE_VERSIONS/latest"
+        else   
+            rm $FILE
+            rm -R "moodle"
+        fi
+    fi
+    echo "get_moodle: Done."
+}
+
+prepare_upgrade() {
+    echo "======="
+    echo "Renaming old folder and recreating"
+    echo "======="
+
+    NOW=$(date +"%Y-%m-%d")
+
+    sudo mv "$(config_get MOODLE_HTDOCS)" "$(config_get MOODLE_HTDOCS)_$NOW"
+    sudo mkdir "$(config_get MOODLE_HTDOCS)"
+    sudo chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    echo "======"
+    echo "Copying back config.php file"
+    echo "======"
+
+    cp "$(config_get MOODLE_HTDOCS)_$NOW/config.php" "$(config_get MOODLE_HTDOCS)"/config.php
+
+}
+
+enable_maintenance() {
+    echo '=========='
+    echo "Switching on Maintenance mode"
+    echo '=========='
+    sudo -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --enable
+
+    sudo chown -R "$(config_get USER)":"$(config_get USER)" "$(config_get MOODLE_HTDOCS)"    
+}
+
+disable_maintenance() {
+    echo '=========='
+    echo "Switching off Maintenance mode"
+    echo '=========='
+    sudo -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --disable 
+}
+
+sync_plugins() {
+    echo '=========='
+    echo "Running sync_plugins()"
+    echo '=========='
+
+    echo "Note: This will update www and moodledata/lang.  If you need to update all moodledata, change the file."
+
+    echo "Looking for new Moodle files..."
+
+    MIGRATION_DIR="$(config_get MIGRATION_DIR)"
+    if [ -d "$MIGRATION_DIR" ]; then
+        echo "$MIGRATION_DIR exists."
+    else
+        echo "Migration directory does not exist or could not be found, you should not continue!"
+        echo "Check the 'config.cfg' file make sure 'MIGRATION_DIR' is set correclty."
+        read -p "Press [Enter] to continue at your own risk, or [ctl + c] to abort."
+    fi
+
+    echo '=========='
+    echo "Changing target ownership."
+    echo '=========='
+
+    sudo chown -R "$(config_get USER)":"$(config_get USER)" "$(config_get MOODLE_HTDOCS)"
+    sudo chown -R "$(config_get USER)":"$(config_get USER)" "$(config_get MOODLE_DATA)"/lang
+
+    echo '=========='
+    echo "Syncronising moodle_migration"
+    echo '=========='
+
+    rsync -avz "$MIGRATION_DIR"/htdocs/ "$(config_get MOODLE_HTDOCS)"/
+    rsync -avz "$MIGRATION_DIR"/moodledata/lang/ "$(config_get MOODLE_DATA)"/lang/
+
+    echo "=========="
+    echo "Running patches"
+    echo "=========="
+    "$MIGRATION_DIR"/patches/patches.sh
+
+    echo '=========='
+    echo "Changing back ownership"
+    echo '=========='
+
+    sudo chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    sudo chown -R "$(config_get WWW_USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_DATA)"/lang
+}
+
+sync_release() {
+    echo '=========='
+    echo "Syncronising the lastest Moodle release"
+    echo '=========='
+    rsync -avz "$(config_get MOODLE_VERSIONS)"/"$(config_get MOODLE_LATEST)"/ "$(config_get MOODLE_HTDOCS)"/
+}
+
+fix_moodle_perms() {
+    echo '=========='
+    echo "Running fix_moodle_perms()"
+    echo '=========='
+
+    sudo chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -exec chmod 0644 {} \;
+    sudo find "$(config_get MOODLE_HTDOCS)"/. -type d -exec chmod 0755 {} \;
+
+    # These are files that need to remain executable.
+    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.darwin" -exec chmod 0755 {} \;
+    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.exe" -exec chmod 0755 {} \;
+    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.linux" -exec chmod 0755 {} \;
+    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.freebsd" -exec chmod 0755 {} \;
+    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "algebra2tex.pl" -exec chmod 0755 {} \;
+}
+
+moodle_upgrade() {
+    echo '=========='
+    echo "Running Moodle upgrade"
+    echo '=========='
+    sudo -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/upgrade.php
+}
+
+make_moodle_config() {
+    MOODLE_CFG_DB_TYPE="$(config_get MOODLE_CFG_DB_TYPE)"
+    MOODLE_CFG_DB_HOST="$(config_get MOODLE_CFG_DB_HOST)"
+    MOODLE_CFG_DB_NAME="$(config_get MOODLE_CFG_DB_NAME)"
+    MOODLE_CFG_DB_USER="$(config_get MOODLE_CFG_DB_USER)"
+    MOODLE_CFG_DB_PASS="$(config_get MOODLE_CFG_DB_PASS)"
+    MOODLE_CFG_DB_PREF="$(config_get MOODLE_CFG_DB_PREF)"
+    MOODLE_CFG_WWWROOT="$(config_get MOODLE_CFG_WWWROOT)"
+    MOODLE_CFG_DATAROOT="$(config_get MOODLE_CFG_DATAROOT)"
+    sudo php ./make_moodle_config.php $MOODLE_CFG_DB_TYPE $MOODLE_CFG_DB_HOST $MOODLE_CFG_DB_NAME $MOODLE_CFG_DB_USER $MOODLE_CFG_DB_PASS $MOODLE_CFG_DB_PREF $MOODLE_CFG_WWWROOT $MOODLE_CFG_DATAROOT 
+    if [ -f "./config.php" ]
+    then
+            mv "./config.php" "$(config_get MOODLE_HTDOCS)/config.php"
+    fi
+}
+
+moodle_install() {
+    MOODLE_CFG_DB_TYPE="$(config_get MOODLE_CFG_DB_TYPE)"
+    MOODLE_CFG_DB_HOST="$(config_get MOODLE_CFG_DB_HOST)"
+    MOODLE_CFG_DB_NAME="$(config_get MOODLE_CFG_DB_NAME)"
+    MOODLE_CFG_DB_USER="$(config_get MOODLE_CFG_DB_USER)"
+    MOODLE_CFG_DB_PASS="$(config_get MOODLE_CFG_DB_PASS)"
+    MOODLE_CFG_DB_PREF="$(config_get MOODLE_CFG_DB_PREF)"
+    MOODLE_CFG_WWWROOT="$(config_get MOODLE_CFG_WWWROOT)"
+    MOODLE_CFG_DATAROOT="$(config_get MOODLE_CFG_DATAROOT)"
+    MOODLE_CFG_SITENAME="$(config_get MOODLE_CFG_SITENAME)"
+    MOODLE_CFG_SHORTNAME="$(config_get MOODLE_CFG_SHORTNAME)"
+    MOODLE_CFG_ADMINPASSWORD="$(config_get MOODLE_CFG_ADMINPASSWORD)"
+    MOODLE_CFG_ADMINEMAIL="$(config_get MOODLE_CFG_ADMINEMAIL)"
+    php $(config_get MOODLE_HTDOCS)/admin/cli/install_database.php --agree-license --fullname=$MOODLE_CFG_SITENAME --shortname=$MOODLE_CFG_SHORTNAME --wwwroot=$MOODLE_CFG_WWWROOT --dataroot=$MOODLE_CFG_DATAROOT --dbtype=$MOODLE_CFG_DB_TYPE --dbhost=$MOODLE_CFG_DB_HOST --dbname=$MOODLE_CFG_DB_NAME --dbuser=$MOODLE_CFG_DB_USER --dbpass=$MOODLE_CFG_DB_PASS --prefix=$MOODLE_CFG_DB_PREF --adminuser=admin --adminpass=$MOODLE_CFG_ADMINPASSWORD --adminemail=$MOODLE_CFG_ADMINEMAIL
+    
+    # DEFAULTS we could use
+    # --wwwroot=$MOODLE_CFG_WWWROOT
+    # --dataroot=$MOODLE_CFG_DATAROOT
+    # --dbtype=$MOODLE_CFG_DB_TYPE
+    # --dbhost=$MOODLE_CFG_DB_HOST
+    # --dbname=$MOODLE_CFG_DB_NAME
+    # --dbuser=$MOODLE_CFG_DB_USER
+    # --dbpass=$MOODLE_CFG_DB_PASS
+    # --dbport=NUMBER
+    # --dbsocket=PATH
+    # --prefix=$MOODLE_CFG_DB_PREF
+    # --fullname=STRING
+    # --shortname=STRING
+    # --summary=STRING
+    # --adminuser="admin"
+    # --adminpass=$MOODLE_CFG_ADMINPASSWORD
+    # --adminemail=$MOODLE_CFG_ADMINEMAIL
+}

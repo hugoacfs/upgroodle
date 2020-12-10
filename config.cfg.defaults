@@ -1,0 +1,21 @@
+# make sure to remove all comments and this line from config.cfg
+MOODLE_HTDOCS=/var/www/html                 # directory path where moodle will be installed
+MOODLE_DATA=/var/www/moodledata             # directory path where moodledata is
+MOODLE_VERSIONS=./moodle_versions           # moodle versions directory where core moodle is downloaded to
+MOODLE_LATEST=latest                        # desired moodle directory to be used in the install (moodle-38 for example) can be left as latest for latest download
+USER=root                                   # ubuntu user or root if no ubuntu user exists
+WWW_USER=www-data                           # www-data user
+MIGRATION_DIR=../moodle                     # migration directory that should contain htdocs and moodledata sub directories
+# variables for moodle config file, not needed unless -c option is used
+MOODLE_CFG_DB_TYPE=innodb
+MOODLE_CFG_DB_HOST=localhost
+MOODLE_CFG_DB_NAME=moodle
+MOODLE_CFG_DB_USER=root
+MOODLE_CFG_DB_PASS=password
+MOODLE_CFG_DB_PREF=mdl_
+MOODLE_CFG_WWWROOT=http://localhost
+MOODLE_CFG_DATAROOT=/var/www/moodledata
+MOODLE_CFG_SITENAME=Moodle
+MOODLE_CFG_SHORTNAME=Mdl
+MOODLE_CFG_ADMINPASSWORD=Moodle123!
+MOODLE_CFG_ADMINEMAIL=admin@localhost.com
