@@ -264,3 +264,69 @@ moodle_install() {
     # --adminpass=$MOODLE_CFG_ADMINPASSWORD
     # --adminemail=$MOODLE_CFG_ADMINEMAIL
 }
+
+configure() {
+    echo "Bash version: $BASH_VERSION "
+    if (( BASH_VERSINFO < 4 ))
+    then
+        echo 'This method is only supported by bash version 4 or higher, aborting.'
+        exit 1
+    fi
+    if [ ! -f "./config.cfg" ]
+    then
+        echo 'No config.cfg file found, do you want to create a new one?'
+        read -p "(Enter 'y' for yes, 'n' for no) : " confirmcreatefile
+        if [[ $confirmcreatefile != 'y' ]]
+        then
+            echo "Aborting."
+            exit 1 
+        fi
+        cp "./config.cfg.defaults config.cfg"
+    fi
+    echo 'Starting configuration process...'
+    declare -A current_configuration
+    current_configuration=( 
+        ["MOODLE_HTDOCS"]="$(config_get MOODLE_HTDOCS)" 
+        ["MOODLE_DATA"]="$(config_get MOODLE_DATA)"
+        ["MOODLE_VERSIONS"]="$(config_get MOODLE_VERSIONS)"
+        ["MOODLE_LATEST"]="$(config_get MOODLE_LATEST)"
+        ["USER"]="$(config_get USER)"
+        ["WWW_USER"]="$(config_get WWW_USER)"
+        ["MIGRATION_DIR"]="$(config_get MIGRATION_DIR)"
+        ["MOODLE_CFG_DB_TYPE"]="$(config_get MOODLE_CFG_DB_TYPE)"
+        ["MOODLE_CFG_DB_HOST"]="$(config_get MOODLE_CFG_DB_HOST)"
+        ["MOODLE_CFG_DB_NAME"]="$(config_get MOODLE_CFG_DB_NAME)"
+        ["MOODLE_CFG_DB_USER"]="$(config_get MOODLE_CFG_DB_USER)"
+        ["MOODLE_CFG_DB_PASS"]="$(config_get MOODLE_CFG_DB_PASS)"
+        ["MOODLE_CFG_DB_PREF"]="$(config_get MOODLE_CFG_DB_PREF)"
+        ["MOODLE_CFG_WWWROOT"]="$(config_get MOODLE_CFG_WWWROOT)"
+        ["MOODLE_CFG_DATAROOT"]="$(config_get MOODLE_CFG_DATAROOT)"
+        ["MOODLE_CFG_SITENAME"]="$(config_get MOODLE_CFG_SITENAME)"
+        ["MOODLE_CFG_SHORTNAME"]="$(config_get MOODLE_CFG_SHORTNAME)"
+        ["MOODLE_CFG_ADMINPASSWORD"]="$(config_get MOODLE_CFG_ADMINPASSWORD)"
+        ["MOODLE_CFG_ADMINEMAIL"]="$(config_get MOODLE_CFG_ADMINEMAIL)"
+        )
+    CONFIG_FILE_CONTENTS=""
+    for KEY in "${!current_configuration[@]}"; do
+        echo '----------------------------------------'
+        # Print the KEY value
+        echo "$KEY: {${current_configuration[$KEY]}}"
+        # Print the VALUE attached to that KEY
+        echo "Do you wish to update $KEY?"
+        read -p "(Enter 'y' to update value, 'Enter' to keep value) : " confirmcreatefile
+        if [[ $confirmcreatefile == 'y' ]]
+        then
+            read -p "New value: " newvalue
+            current_configuration[$KEY]=$newvalue
+            echo "Value set: ${current_configuration[$KEY]}"
+        else
+            current_configuration[$KEY]=${current_configuration[$KEY]}
+        fi
+        CONFIG_FILE_CONTENTS="${CONFIG_FILE_CONTENTS}$KEY=${current_configuration[$KEY]}""%s\n"
+    done
+    echo 'Removing config.cfg...'
+    rm config.cfg
+    echo 'Creating new config.cfg...'
+    printf $CONFIG_FILE_CONTENTS > config.cfg
+    echo 'Done configure()'
+}
