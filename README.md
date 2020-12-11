@@ -44,7 +44,7 @@ This method allows the user to call individual functions from the script library
 
 ## Folder Structure
 
-```
+```console
 .
 ├── moodle_versions             -> Automatically generated, holds the Moodle downloads
 │   └── latest                  -> Automaitcally generated, holds the most recent Moodle download

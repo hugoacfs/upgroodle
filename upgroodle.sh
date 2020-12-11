@@ -155,10 +155,12 @@ then
    exit 1 
 fi
 
-if [[ $(($VERSION)) > 39 ]] || [[ $(($VERSION)) < 34 ] && [ $(($VERSION)) > 311 ]] || [[ $(($VERSION)) < 310 ]] 
+if (( $VERSION <= 39 && $VERSION >= 34 )) || (( $VERSION <= 311 && $VERSION >= 310 ))
 then 
-   echo "Cannot support versions of Moodle after 3.9 or before 3.4 yet, try overriding this manually, aborting.";
-   exit 1 
+   echo "Installing supported version: $VERSION ...";
+else
+   echo "Cannot support versions of Moodle newer than 3.11 or older than 3.4 yet, aborting.";
+   exit 1
 fi
 
 case "$TASK" in 
