@@ -1,8 +1,15 @@
-config_read_file() {
+output_tred=`tput setaf 1`
+output_bwhite=`tput sgr 0`
+output_tgreen=`tput setaf 2`
+output_reset=`tput sgr0`
+
+config_read_file() # Internal use only: Fetch configuration helper
+{
     (grep -E "^${2}=" -m 1 "${1}" 2>/dev/null || echo "VAR=__UNDEFINED__") | head -n 1 | cut -d '=' -f 2-;
 }
 
-config_get() {
+function config_get() # Gets a variable from the config.cfg or config.cfg.defaults in case var does not exist
+{
     val="$(config_read_file config.cfg "${1}")";
     if [ "${val}" = "__UNDEFINED__" ]; then
         val="$(config_read_file config.cfg.defaults "${1}")";
@@ -10,7 +17,8 @@ config_get() {
     printf -- "%s" "${val}";
 }
 
-purge_moodle_versions() {
+function purge_moodle_versions() # Purges everything inside MOODLE_VERSIONS
+{
     MOODLE_VERSIONS="$(config_get MOODLE_VERSIONS)"
     if [ ! -d "$MOODLE_VERSIONS" ]
     then
@@ -39,7 +47,8 @@ purge_moodle_versions() {
     echo "purge_moodle_versions: Done."
 }
 
-get_moodle() {
+function get_moodle() # Get's Core Moodle by version and release(optional) using the -v and -r tags
+{
     VERSION=$VERSION
     RELEASE=$RELEASE
     MOODLE_VERSIONS="$(config_get MOODLE_VERSIONS)"
@@ -105,7 +114,8 @@ get_moodle() {
     echo "get_moodle: Done."
 }
 
-prepare_upgrade() {
+function prepare_upgrade() # Prepares Moodle upgrade by moving the folder and renaming it. It keeps config.php
+{
     echo "======="
     echo "Renaming old folder and recreating"
     echo "======="
@@ -123,7 +133,8 @@ prepare_upgrade() {
 
 }
 
-enable_maintenance() {
+function enable_maintenance() # Turns Moodle maintenance mode ON
+{
     echo '=========='
     echo "Switching on Maintenance mode"
     echo '=========='
@@ -132,14 +143,16 @@ enable_maintenance() {
     sudo chown -R "$(config_get USER)":"$(config_get USER)" "$(config_get MOODLE_HTDOCS)"    
 }
 
-disable_maintenance() {
+function disable_maintenance() # Turns Moodle maintenance mode OFF
+{
     echo '=========='
     echo "Switching off Maintenance mode"
     echo '=========='
     sudo -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --disable 
 }
 
-sync_plugins() {
+function sync_plugins() # Syncs the MIGRATION_DIR htdocs and moodledata folders to the MOODLE_HTDOCS and MOODLE_DATA
+{
     echo '=========='
     echo "Running sync_plugins()"
     echo '=========='
@@ -184,14 +197,16 @@ sync_plugins() {
     sudo chown -R "$(config_get WWW_USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_DATA)"/lang
 }
 
-sync_release() {
+function sync_release() # Rsyncs the MOODLE_VERSIONS/MOODLE_LATEST folder to MOODLE_HTDOCS
+{
     echo '=========='
     echo "Syncronising the lastest Moodle release"
     echo '=========='
     rsync -avz "$(config_get MOODLE_VERSIONS)"/"$(config_get MOODLE_LATEST)"/ "$(config_get MOODLE_HTDOCS)"/
 }
 
-fix_moodle_perms() {
+function fix_moodle_perms() # Fixes moodle permissions of MOODLE_HTDOCS
+{
     echo '=========='
     echo "Running fix_moodle_perms()"
     echo '=========='
@@ -208,14 +223,16 @@ fix_moodle_perms() {
     sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "algebra2tex.pl" -exec chmod 0755 {} \;
 }
 
-moodle_upgrade() {
+function moodle_upgrade() # Triggers the upgrade.php Moodle script'
+{
     echo '=========='
     echo "Running Moodle upgrade"
     echo '=========='
     sudo -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/upgrade.php
 }
 
-make_moodle_config() {
+function make_moodle_config() # Creates a config.php using the variables and moves it to the target htdocs directory
+{
     MOODLE_CFG_DB_TYPE="$(config_get MOODLE_CFG_DB_TYPE)"
     MOODLE_CFG_DB_HOST="$(config_get MOODLE_CFG_DB_HOST)"
     MOODLE_CFG_DB_NAME="$(config_get MOODLE_CFG_DB_NAME)"
@@ -231,7 +248,8 @@ make_moodle_config() {
     fi
 }
 
-moodle_install() {
+function moodle_install() # Triggers the install_database.php Moodle script using the variables stored
+{
     MOODLE_CFG_DB_TYPE="$(config_get MOODLE_CFG_DB_TYPE)"
     MOODLE_CFG_DB_HOST="$(config_get MOODLE_CFG_DB_HOST)"
     MOODLE_CFG_DB_NAME="$(config_get MOODLE_CFG_DB_NAME)"
@@ -265,7 +283,8 @@ moodle_install() {
     # --adminemail=$MOODLE_CFG_ADMINEMAIL
 }
 
-configure() {
+function configure() # Creates a new, or updates the existing config.cfg file
+{
     echo "Bash version: $BASH_VERSION "
     if (( BASH_VERSINFO < 4 ))
     then
@@ -329,4 +348,24 @@ configure() {
     echo 'Creating new config.cfg...'
     printf $CONFIG_FILE_CONTENTS > config.cfg
     echo 'Done configure()'
+}
+
+function setup_upgroodle() # Installs additional commands to be used
+{
+    echo "Running upgroodle setup, this will install 'rsync', 'wget', 'zip' and 'grep'."
+    read -p "Press Enter to continue "
+    sudo apt update
+    sudo apt install rsync wget zip grep
+    exit 1
+}
+
+function show_functions() # Show a list of functions
+{
+    echo "Showing available functions:"
+    these_functions=`grep -o " [a-z].*(_*) # .*" "config.shlib"`
+    ## inserting colours
+    functions_help=`echo -e "$these_functions" | sed 's/\(#\)/\n\1/g' | sed 's/\(#\)/ \\\033[0;37m \1/g' | sed 's/^/\\\033[0;36m/'`
+
+    echo -e "$functions_help"
+    exit 1
 }
