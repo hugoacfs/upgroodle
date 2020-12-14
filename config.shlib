@@ -120,7 +120,7 @@ function prepare_upgrade() # Prepares Moodle upgrade by moving the folder and re
     echo "Renaming old folder and recreating"
     echo "======="
 
-    NOW=$(date +"%Y-%m-%d")
+    NOW=$(date +"%Y-%m-%d_%H-%M-%S")
 
     sudo mv "$(config_get MOODLE_HTDOCS)" "$(config_get MOODLE_HTDOCS)_$NOW"
     sudo mkdir "$(config_get MOODLE_HTDOCS)"
