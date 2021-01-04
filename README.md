@@ -37,10 +37,12 @@ To use the scripts, focus on the upgroodle.sh file.
 There are two main ways to use this script, the simple method and the advanced method.
 
 ### Simple Method
-This method is used for letting the script handle most of the upgrade.
+This method is used for letting the script handle most of the upgrade. Simple method is documented, simply run `./upgroodle.sh` to get help.
 
 ### Advanced Method
-This method allows the user to call individual functions from the script library to do things. Useful for debugging and other tasks rather than upgrade/install.
+This method allows the user to call individual functions from the script library to do things. Useful for debugging and other tasks rather than upgrade/install. 
+Usage: `./upgroodle.sh -d 'function_name' (+ other parameters needed by function)`
+Example: `./upgroodle.sh -d get_moodle -v 38 -r 3.8.4`
 
 ## Folder Structure
 
