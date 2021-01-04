@@ -1,4 +1,4 @@
-# Scripts
+# Upgroodle
 
 When doing an update/upgrade etc this directory has some useful scripts for automating the process.
 
