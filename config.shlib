@@ -12,7 +12,8 @@ interactive_check() # Internal use only: Interactive mode check
     INTERACTIVE=$INTERACTIVE
     if [[ $INTERACTIVE == "1" ]]
     then
-        read -p "[Interactive Mode] Press Enter to continue or CTRL + C to cancel. : "
+        echo -e "$CL_RED[IM]""$CL_RESET Press Enter to continue or CTRL + C to cancel. "
+        read -p "   "
     fi
 }
 
@@ -123,7 +124,7 @@ function get_moodle() # Get's Core Moodle by version and release(optional) using
             mv $FILE "$MOODLE_VERSIONS/$FILE"
             mv "moodle" "$MOODLE_VERSIONS/$FOLDERNAME"
             interactive_check
-            echo "Fixing permissions of unziped folder..."
+            echo "Fixing permissions of unzipped folder..."
             find "$MOODLE_VERSIONS/$FOLDERNAME/." -type f -exec chmod 0644 {} \;
             find "$MOODLE_VERSIONS/$FOLDERNAME/." -type d -exec chmod 0755 {} \;
             interactive_check
@@ -402,7 +403,7 @@ function show_functions() # Show a list of functions
     echo "Showing available functions:"
     these_functions=`grep -o " [a-z].*(_*) # .*" "config.shlib"`
     ## inserting colours
-    functions_help=`echo -e "$these_functions" | sed 's/\(#\)/\n\1/g' | sed 's/\(#\)/ \\\033[0;37m \1/g' | sed 's/^/\\\033[0;36m/'`
+    functions_help=`echo -e "$these_functions" | sed 's/\(#\)/\n\1/g' | sed 's/\(#\)/ \\\e[0m \1/g' | sed 's/^/\\\033[0;36m/'`
 
     echo -e "$functions_help"
     exit 1

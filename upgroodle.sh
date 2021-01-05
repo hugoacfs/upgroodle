@@ -101,17 +101,38 @@ moodle_install()
 
 COMMENT1
 
+# COLOURS
+CL_BLACK='\033[0;30m'
+CL_DGREY='\033[1;30m'
+CL_RED='\033[0;31m'
+CL_LRED='\033[1;31m'
+CL_GREEN='\033[0;32m'
+CL_LGREEN='\033[1;32m'
+CL_ORANGE='\033[0;33m'
+CL_YELLOW='\033[1;33m'
+CL_BLUE='\033[0;34m'
+CL_LBLUE='\033[1;34m'
+CL_PURPLE='\033[0;35m'
+CL_LPURPLE='\033[1;35m'
+CL_CYAN='\033[0;36m'
+CL_LCYAN='\033[1;36m'
+CL_LGREY='\033[0;37m'
+CL_WHITE='\033[1;37m'
+CL_RESET='\e[0m'
+# Resetting colors
+echo -e "$CL_RESET"
+
 help_me()
 {
    echo "Usage:"
-   echo "$ upgroodle -t 'install|upgrade' -v '3x' -m 'vanilla|hosted' [optional: -r '3.x.x'] [optional: -c, -i ]"
-   echo -e "\t-d Run function: 'get_moodle' etc "
-   echo -e "\t-t Available tasks: 'upgrade', 'install'"
-   echo -e "\t-v Version should correspond to Moodle version. e.g. '38' for lastest version of Moodle 3.8.+"
-   echo -e "\t-r Release that corresponds to Moodle version. e.g. '3.8.4' for the specific release for version 3.8"
-   echo -e "\t-m Available modes: 'vanilla' (default), 'hosted' (hosted plugins)"
-   echo -e "\t-c (optional) Enable creation of config.php file for Moodle from config.cfg file."
-   echo -e "\t-i (optional) Enable interactive mode (feature preview)." #TODO improve description
+   echo -e "$CL_RED""$""$CL_RESET upgroodle $CL_RED""-t""$CL_RESET 'install|upgrade' $CL_RED""-v""$CL_RESET '3x' $CL_RED""-m""$CL_RESET 'vanilla|hosted' [optional: $CL_RED""-r""$CL_RESET '3.x.x'] [optional: $CL_RED""-c""$CL_RESET, $CL_RED""-i""$CL_RESET ]"
+   echo -e "\t$CL_RED""-d""$CL_RESET Run function: 'get_moodle' etc "
+   echo -e "\t$CL_RED""-t""$CL_RESET Available tasks: 'upgrade', 'install'"
+   echo -e "\t$CL_RED""-v""$CL_RESET Version should correspond to Moodle version. e.g. '38' for lastest version of Moodle 3.8.+"
+   echo -e "\t$CL_RED""-r""$CL_RESET Release that corresponds to Moodle version. e.g. '3.8.4' for the specific release for version 3.8"
+   echo -e "\t$CL_RED""-m""$CL_RESET Available modes: 'vanilla' (default), 'hosted' (hosted plugins)"
+   echo -e "\t$CL_RED""-c""$CL_RESET (optional) Enable creation of config.php file for Moodle from config.cfg file."
+   echo -e "\t$CL_RED""-i""$CL_RESET (optional) Enable interactive mode (feature preview)." #TODO improve description
    exit 1 # Exit script after printing help
 }
 
@@ -130,6 +151,11 @@ do
    esac
 done
 
+if [[ $INTERACTIVE == "1" ]]
+    then
+        echo -e "$CL_RED[Interactive Mode]$CL_RESET Enabled. \033[0;37m"
+fi
+
 if [ ! -z "$DO" ] 
 then
    echo "Running function $DO";
@@ -140,7 +166,7 @@ fi
 # Print help_me in case parameters are empty
 if [ -z "$TASK" ] || [ -z "$VERSION" ]
 then
-   echo "Incorrect usage, run './upgroodle.sh -h' for help, or './upgroodle.sh -d show_functions' for advanced usage.";
+   echo -e "Incorrect usage, run $CL_LBLUE""'./upgroodle.sh -h'""$CL_RESET for help, or $CL_LBLUE""'./upgroodle.sh -d show_functions'""$CL_RESET for advanced usage.";
    exit 1 
 fi
 
