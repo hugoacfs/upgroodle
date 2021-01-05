@@ -104,13 +104,13 @@ COMMENT1
 help_me()
 {
    echo "Usage:"
-   echo "$ upgroodle -t 'install|upgrade' -v '3x' -m 'vanilla|hosted' [optional: -r '3.x.x'] [optional: -c ] [optional: -i ]"
+   echo "$ upgroodle -t 'install|upgrade' -v '3x' -m 'vanilla|hosted' [optional: -r '3.x.x'] [optional: -c, -i ]"
    echo -e "\t-d Run function: 'get_moodle' etc "
    echo -e "\t-t Available tasks: 'upgrade', 'install'"
    echo -e "\t-v Version should correspond to Moodle version. e.g. '38' for lastest version of Moodle 3.8.+"
    echo -e "\t-r Release that corresponds to Moodle version. e.g. '3.8.4' for the specific release for version 3.8"
    echo -e "\t-m Available modes: 'vanilla' (default), 'hosted' (hosted plugins)"
-   echo -e "\t-c (optional) Enable creation of config.php file for Moodle from config.cfg file: Takes 'yes' if want to enable."
+   echo -e "\t-c (optional) Enable creation of config.php file for Moodle from config.cfg file."
    echo -e "\t-i (optional) Enable interactive mode (feature preview)." #TODO improve description
    exit 1 # Exit script after printing help
 }
