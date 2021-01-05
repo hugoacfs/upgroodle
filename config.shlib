@@ -7,6 +7,14 @@ config_read_file() # Internal use only: Fetch configuration helper
 {
     (grep -E "^${2}=" -m 1 "${1}" 2>/dev/null || echo "VAR=__UNDEFINED__") | head -n 1 | cut -d '=' -f 2-;
 }
+interactive_check() # Internal use only: Interactive mode check 
+{
+    INTERACTIVE=$INTERACTIVE
+    if [[ $INTERACTIVE == "1" ]]
+    then
+        read -p "[Interactive Mode] Press Enter to continue or CTRL + C to cancel. : "
+    fi
+}
 
 function config_get() # Gets a variable from the config.cfg or config.cfg.defaults in case var does not exist
 {
@@ -72,10 +80,11 @@ function get_moodle() # Get's Core Moodle by version and release(optional) using
         fi
         echo "Creating dir $MOODLE_VERSIONS ..."
         mkdir $MOODLE_VERSIONS
+        interactive_check
     fi  
-    echo "get_moodle VERSION=$VERSION"
-    echo "get_moodle RELEASE=$RELEASE"
-
+    echo "Moodle version -> $VERSION"
+    echo "Moodle release -> $RELEASE"
+    interactive_check
     STABLE="stable$VERSION"
     FILE="moodle-latest-$VERSION.tgz"
     FOLDERNAME="moodle-$VERSION"
@@ -84,43 +93,59 @@ function get_moodle() # Get's Core Moodle by version and release(optional) using
         FOLDERNAME="moodle-$VERSION-$RELEASE"
         FILE="moodle-$RELEASE.tgz"
         if [ -d "$MOODLE_VERSIONS/$FOLDERNAME" ]; then
-            echo 'Release already available in moodle versions folder, skipping'
-            read -p "(Press Enter to continue) : "
+            echo 'Release already available in moodle versions folder, skipping download...'
+            interactive_check
             PREVENTDOWNLOAD="1"
         fi
     else
         if [ -f "$MOODLE_VERSIONS/$FILE" ]
         then
+            echo "Files already found, removing previous download from MOODLE_VERSIONS..."
             rm "$MOODLE_VERSIONS/$FILE"
             rm -R "$MOODLE_VERSIONS/$FOLDERNAME"
+            interactive_check
         fi
     fi
-
+    echo "Downloading moodle from download.moodle.org..."
     if [ -z ${PREVENTDOWNLOAD+x} ] && wget "https://download.moodle.org/download.php/direct/$STABLE/$FILE"
     then
+        interactive_check
         if [ -d "$FOLDERNAME" ]; then
-                rm -r "$MOODLE_VERSIONS/$FOLDERNAME"
+            echo "Folder with same name found, removing..."
+            rm -r "$MOODLE_VERSIONS/$FOLDERNAME"
+            interactive_check
         fi
-        
+        echo "Uncompressing files..."
         if tar -xzf $FILE
         then
+            interactive_check
+            echo "Moving files to MOODLE_VERSIONS..."
             mv $FILE "$MOODLE_VERSIONS/$FILE"
             mv "moodle" "$MOODLE_VERSIONS/$FOLDERNAME"
-            echo "Fixing permissions of unziped folder"
+            interactive_check
+            echo "Fixing permissions of unziped folder..."
             find "$MOODLE_VERSIONS/$FOLDERNAME/." -type f -exec chmod 0644 {} \;
             find "$MOODLE_VERSIONS/$FOLDERNAME/." -type d -exec chmod 0755 {} \;
+            interactive_check
             echo "Creating 'latest' directory from '$FOLDERNAME'"
             if [ -d "$MOODLE_VERSIONS/latest" ]
             then
+                echo "Removing current LATEST folder and contents..."
                 rm -r "$MOODLE_VERSIONS/latest"
-            fi  
+                interactive_check
+            fi
+            echo "Copying folder to LATEST folder..."
             cp -r "$MOODLE_VERSIONS/$FOLDERNAME" "$MOODLE_VERSIONS/latest"
-        else   
+            interactive_check
+        else
+            echo "Removing temporary files..."
             rm $FILE
             rm -R "moodle"
+            interactive_check
         fi
     fi
     echo "get_moodle: Done."
+    interactive_check
 }
 
 function prepare_upgrade() # Prepares Moodle upgrade by moving the folder and renaming it. It keeps config.php
@@ -363,10 +388,12 @@ function configure() # Creates a new, or updates the existing config.cfg file
 
 function setup_upgroodle() # Installs additional commands to be used
 {
+    # TODO using which command check if sudo is installed (or any of them and install only missing)
+    SUDO=(`which sudo`) # TODO make global var
     echo "Running upgroodle setup, this will install 'rsync', 'wget', 'zip' and 'grep'."
     read -p "Press Enter to continue "
-    sudo apt update
-    sudo apt install rsync wget zip grep
+    $SUDO apt update
+    $SUDO apt install rsync wget zip grep
     exit 1
 }
 
