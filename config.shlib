@@ -17,6 +17,15 @@ function config_get() # Gets a variable from the config.cfg or config.cfg.defaul
     printf -- "%s" "${val}";
 }
 
+function description_get() # Gets a variable from the config.cfg.descriptions or defaults to not available in case var does not exist
+{
+    val="$(config_read_file config.cfg.descriptions "${1}")";
+    if [ "${val}" = "__UNDEFINED__" ]; then
+        val="Description not available.";
+    fi
+    printf -- "%s" "${val}";
+}
+
 function purge_moodle_versions() # Purges everything inside MOODLE_VERSIONS
 {
     MOODLE_VERSIONS="$(config_get MOODLE_VERSIONS)"
@@ -329,10 +338,12 @@ function configure() # Creates a new, or updates the existing config.cfg file
     for KEY in "${!current_configuration[@]}"; do
         echo '----------------------------------------'
         # Print the KEY value
-        echo "$KEY: {${current_configuration[$KEY]}}"
+        echo "Name:         $KEY"
+        echo "Value:        ${current_configuration[$KEY]}"
+        echo "Description:  $(description_get $KEY)"
         # Print the VALUE attached to that KEY
         echo "Do you wish to update $KEY?"
-        read -p "(Enter 'y' to update value, 'Enter' to keep value) : " confirmcreatefile
+        read -p "(Enter 'y' to update value, 'Enter' to keep the current value) : " confirmcreatefile
         if [[ $confirmcreatefile == 'y' ]]
         then
             read -p "New value: " newvalue
