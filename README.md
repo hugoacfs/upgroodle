@@ -8,19 +8,19 @@ They still need some configuration to work. Copy the config.cfg.defaults over to
 
 ### Setting up
 
-Upgroodle supports Bash shell and it requires certain programs to be installed such as: sudo, rsync, wget, zip and grep. Most systems have sudo already installed, as for the others, simply clone this repository, and in the terminal run `sudo ./upgroodle -d setup_upgroodle` to install the missing packages.
+Upgroodle supports Bash shell and it requires certain programs to be installed such as: sudo, rsync, wget, zip and grep. Most systems have sudo already installed, as for the others, simply clone this repository, and in the terminal run `sudo ./upgroodle.sh -d setup_upgroodle` to install the missing packages.
 
 Now run `./upgroodle.sh -d configure` to get a config file up. Follow the command line instructions and it should be up and running in no time.
 
 ### Installing Moodle
 
-To install Moodle make sure the configuration is correct (quickly run `./upgroodle.sh -d configure`), then run `sudo ./upgroodle -t install -m vanilla -v (version number, e.g. '38')`.
+To install Moodle make sure the configuration is correct (quickly run `./upgroodle.sh -d configure`), then run `sudo ./upgroodle.sh -t install -m vanilla -v (version number, e.g. '38')`.
 
 If you wish to create a brand new Moodle config.php file with upgroodle, make sure that you fill in the required settings when configuring upgroodle. Then make sure to include the `-c` option, this will generate a new config file and set up an admin account for you, which you can change later.
 
 ### Upgrading Moodle
 
-To upgrade Moodle make sure the configuration is correct (quickly run `./upgroodle.sh -d configure`), then run `sudo ./upgroodle -t upgrade -m vanilla -v (version number, e.g. '38')`.
+To upgrade Moodle make sure the configuration is correct (quickly run `./upgroodle.sh -d configure`), then run `sudo ./upgroodle.sh -t upgrade -m vanilla -v (version number, e.g. '38')`.
 
 Upgroodle should fetch the previous config.php file for you, but if you wish to make a new one then include the `-c` option when running the upgrade.
 
