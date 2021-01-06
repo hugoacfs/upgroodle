@@ -10,17 +10,17 @@ They still need some configuration to work. Copy the config.cfg.defaults over to
 
 Upgroodle supports Bash shell and it requires certain programs to be installed such as: sudo, rsync, wget, zip and grep. Most systems have sudo already installed, as for the others, simply clone this repository, and in the terminal run `sudo ./upgroodle -d setup_upgroodle` to install the missing packages.
 
-Now run `./upgroodle -d configure` to get a config file up. Follow the command line instructions and it should be up and running in no time.
+Now run `./upgroodle.sh -d configure` to get a config file up. Follow the command line instructions and it should be up and running in no time.
 
 ### Installing Moodle
 
-To install Moodle make sure the configuration is correct (quickly run `./upgroodle -d configure`), then run `sudo ./upgroodle -t install -m vanilla -v (version number, e.g. '38')`.
+To install Moodle make sure the configuration is correct (quickly run `./upgroodle.sh -d configure`), then run `sudo ./upgroodle -t install -m vanilla -v (version number, e.g. '38')`.
 
 If you wish to create a brand new Moodle config.php file with upgroodle, make sure that you fill in the required settings when configuring upgroodle. Then make sure to include the `-c` option, this will generate a new config file and set up an admin account for you, which you can change later.
 
 ### Upgrading Moodle
 
-To upgrade Moodle make sure the configuration is correct (quickly run `./upgroodle -d configure`), then run `sudo ./upgroodle -t upgrade -m vanilla -v (version number, e.g. '38')`.
+To upgrade Moodle make sure the configuration is correct (quickly run `./upgroodle.sh -d configure`), then run `sudo ./upgroodle -t upgrade -m vanilla -v (version number, e.g. '38')`.
 
 Upgroodle should fetch the previous config.php file for you, but if you wish to make a new one then include the `-c` option when running the upgrade.
 
@@ -62,12 +62,12 @@ To use the scripts, focus on the upgroodle.sh file.
 There are two main ways to use this script, the simple method and the advanced method.
 
 ### Simple Method
-This method is used for letting the script handle most of the upgrade. Simple method is documented, simply run `./upgroodle.sh` to get help.
+This method is used for letting the script handle most of the upgrade. Simple method is documented, simply run `./upgroodle.sh.sh` to get help.
 
 ### Advanced Method
 This method allows the user to call individual functions from the script library to do things. Useful for debugging and other tasks rather than upgrade/install. 
-Usage: `./upgroodle.sh -d 'function_name' (+ other parameters needed by function)`
-Example: `./upgroodle.sh -d get_moodle -v 38 -r 3.8.4`
+Usage: `./upgroodle.sh.sh -d 'function_name' (+ other parameters needed by function)`
+Example: `./upgroodle.sh.sh -d get_moodle -v 38 -r 3.8.4`
 
 ## Folder Structure
 
