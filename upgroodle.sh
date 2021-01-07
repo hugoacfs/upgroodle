@@ -153,7 +153,7 @@ done
 
 if [[ $INTERACTIVE == "1" ]]
     then
-        echo -e "$CL_RED[Interactive Mode]$CL_RESET Enabled. \033[0;37m"
+        echo -e "$CL_RED[Interactive Mode]$CL_RESET Enabled."
 fi
 
 if [ ! -z "$DO" ] 
