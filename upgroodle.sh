@@ -1,4 +1,5 @@
 #!/bin/bash
+SUDO=(`command -v sudo`)
 source config.shlib; # load the config & library functions
 <<COMMENT1
 Available functions:
@@ -204,11 +205,16 @@ case "$TASK" in
                 then
                     sync_plugins
                 fi
-                fix_moodle_perms
+                read -p "Fix Moodle perms? (y, n)? " confirmfix
+                if [[ $confirmfix == 'y' ]]
+                then
+                    fix_moodle_perms
+                fi
                 if [[ $CONFIG == '1' ]]
                 then
                     make_moodle_config
                 fi
+                interactive_check
                 moodle_install
                 ;;
 
