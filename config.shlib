@@ -157,9 +157,14 @@ function prepare_upgrade() # Prepares Moodle upgrade by moving the folder and re
 
     NOW=$(date +"%Y-%m-%d_%H-%M-%S")
 
-    sudo mv "$(config_get MOODLE_HTDOCS)" "$(config_get MOODLE_HTDOCS)_$NOW"
-    sudo mkdir "$(config_get MOODLE_HTDOCS)"
-    sudo chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    $SUDO mv "$(config_get MOODLE_HTDOCS)" "$(config_get MOODLE_HTDOCS)_$NOW"
+    $SUDO mkdir "$(config_get MOODLE_HTDOCS)"
+    read -p "Change owndership? (Enter 'y' for yes, 'n' for no) : " confirmownership
+    if [[ $confirmownership == 'y' ]]
+    then
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    fi
+    
     interactive_check
     
     echo "======"
@@ -175,9 +180,13 @@ function enable_maintenance() # Turns Moodle maintenance mode ON
     echo '=========='
     echo "Switching on Maintenance mode"
     echo '=========='
-    sudo -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --enable
+    $SUDO -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --enable
 
-    sudo chown -R "$(config_get USER)":"$(config_get USER)" "$(config_get MOODLE_HTDOCS)"
+    read -p "Change ownership? (Enter 'y' for yes, 'n' for no) : " confirmownership
+    if [[ $confirmownership == 'y' ]]
+    then
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    fi
     interactive_check  
 }
 
@@ -186,7 +195,7 @@ function disable_maintenance() # Turns Moodle maintenance mode OFF
     echo '=========='
     echo "Switching off Maintenance mode"
     echo '=========='
-    sudo -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --disable
+    php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --disable
     interactive_check
 }
 
@@ -214,8 +223,12 @@ function sync_plugins() # Syncs the MIGRATION_DIR htdocs and moodledata folders 
     echo "Changing target ownership."
     echo '=========='
 
-    sudo chown -R "$(config_get USER)":"$(config_get USER)" "$(config_get MOODLE_HTDOCS)"
-    sudo chown -R "$(config_get USER)":"$(config_get USER)" "$(config_get MOODLE_DATA)"/lang
+    read -p "Change ownership? (Enter 'y' for yes, 'n' for no) : " confirmownership
+    if [[ $confirmownership == 'y' ]]
+    then
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    fi
+    
     interactive_check
 
     echo '=========='
@@ -236,8 +249,12 @@ function sync_plugins() # Syncs the MIGRATION_DIR htdocs and moodledata folders 
     echo "Changing back ownership"
     echo '=========='
 
-    sudo chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
-    sudo chown -R "$(config_get WWW_USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_DATA)"/lang
+    read -p "Change ownership? (Enter 'y' for yes, 'n' for no) : " confirmownership
+    if [[ $confirmownership == 'y' ]]
+    then
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    fi
+    
     interactive_check
 }
 
@@ -256,16 +273,21 @@ function fix_moodle_perms() # Fixes moodle permissions of MOODLE_HTDOCS
     echo "Running fix_moodle_perms()"
     echo '=========='
 
-    sudo chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
-    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -exec chmod 0644 {} \;
-    sudo find "$(config_get MOODLE_HTDOCS)"/. -type d -exec chmod 0755 {} \;
+    read -p "Change ownership? (Enter 'y' for yes, 'n' for no) : " confirmownership
+    if [[ $confirmownership == 'y' ]]
+    then
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+    fi
+    
+    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -exec chmod 0644 {} \;
+    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type d -exec chmod 0755 {} \;
 
     # These are files that need to remain executable.
-    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.darwin" -exec chmod 0755 {} \;
-    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.exe" -exec chmod 0755 {} \;
-    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.linux" -exec chmod 0755 {} \;
-    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.freebsd" -exec chmod 0755 {} \;
-    sudo find "$(config_get MOODLE_HTDOCS)"/. -type f -name "algebra2tex.pl" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.darwin" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.exe" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.linux" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.freebsd" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "algebra2tex.pl" -exec chmod 0755 {} \;
     interactive_check
 }
 
@@ -274,7 +296,8 @@ function moodle_upgrade() # Triggers the upgrade.php Moodle script'
     echo '=========='
     echo "Running Moodle upgrade"
     echo '=========='
-    sudo -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/upgrade.php
+    
+    $SUDO php "$(config_get MOODLE_HTDOCS)"/admin/cli/upgrade.php
     interactive_check
 }
 
@@ -289,7 +312,7 @@ function make_moodle_config() # Creates a config.php using the variables and mov
     MOODLE_CFG_WWWROOT="$(config_get MOODLE_CFG_WWWROOT)"
     MOODLE_CFG_DATAROOT="$(config_get MOODLE_CFG_DATAROOT)"
     echo "Creating Moodle 'config.php'..."
-    sudo php ./make_moodle_config.php $MOODLE_CFG_DB_TYPE $MOODLE_CFG_DB_HOST $MOODLE_CFG_DB_NAME $MOODLE_CFG_DB_USER $MOODLE_CFG_DB_PASS $MOODLE_CFG_DB_PREF $MOODLE_CFG_WWWROOT $MOODLE_CFG_DATAROOT 
+    $SUDO php ./make_moodle_config.php $MOODLE_CFG_DB_TYPE $MOODLE_CFG_DB_HOST $MOODLE_CFG_DB_NAME $MOODLE_CFG_DB_USER $MOODLE_CFG_DB_PASS $MOODLE_CFG_DB_PREF $MOODLE_CFG_WWWROOT $MOODLE_CFG_DATAROOT 
     interactive_check
     if [ -f "./config.php" ]
     then
@@ -412,14 +435,13 @@ function setup_upgroodle() # Installs additional commands to be used
     SUDO=(`command -v sudo`)
     if $SUDO &> /dev/null
     then
-        echo "Upgroodle requires 'sudo' to be installed, do you want to install it now?"
+        echo "Upgroodle may require 'sudo' to be installed, do you want to install it now?"
         read -p "(Enter 'y' for yes, 'n' for no) : " confirminstallsudo
-        if [[ $confirminstallsudo != 'y' ]]
+        if [[ $confirminstallsudo == 'y' ]]
         then
-            echo "Cannot run setup_upgroodle without 'sudo' installed, aborting."
-            exit 1 
+            apt install sudo
         fi
-        apt install sudo
+        
     fi
     echo "Running upgroodle setup, this will first run 'sudo apt update'."
     read -p "Press Enter to continue "
