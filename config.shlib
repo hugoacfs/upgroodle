@@ -2,7 +2,7 @@ config_read_file() # Internal use only: Fetch configuration helper
 {
     (grep -E "^${2}=" -m 1 "${1}" 2>/dev/null || echo "VAR=__UNDEFINED__") | head -n 1 | cut -d '=' -f 2-;
 }
-interactive_check() # Internal use only: Interactive mode check 
+interactive_check() # Internal use only: Interactive mode check
 {
     INTERACTIVE=$INTERACTIVE
     if [[ $INTERACTIVE == "1" ]]
@@ -41,7 +41,7 @@ function purge_moodle_versions() # Purges everything inside MOODLE_VERSIONS
         if [[ $confirmcreatedir != 'y' ]]
         then
             echo "Aborting."
-            exit 1 
+            exit 1
         fi
         echo "Creating dir $MOODLE_VERSIONS ..."
         mkdir $MOODLE_VERSIONS
@@ -52,7 +52,7 @@ function purge_moodle_versions() # Purges everything inside MOODLE_VERSIONS
         if [[ $confirmremovedir != 'y' ]]
         then
             echo "Aborting."
-            exit 1 
+            exit 1
         fi
         echo "Removing dir $MOODLE_VERSIONS ..."
         rm -r $MOODLE_VERSIONS
@@ -77,12 +77,12 @@ function get_moodle() # Get's Core Moodle by version and release(optional) using
         if [[ $confirmcreatedir != 'y' ]]
         then
             echo "Aborting "
-            exit 1 
+            exit 1
         fi
         echo "Creating dir $MOODLE_VERSIONS ..."
         mkdir $MOODLE_VERSIONS
         interactive_check
-    fi  
+    fi
     echo "Moodle version -> $VERSION"
     echo "Moodle release -> $RELEASE"
     interactive_check
@@ -157,21 +157,21 @@ function prepare_upgrade() # Prepares Moodle upgrade by moving the folder and re
 
     NOW=$(date +"%Y-%m-%d_%H-%M-%S")
 
-    $SUDO mv "$(config_get MOODLE_HTDOCS)" "$(config_get MOODLE_HTDOCS)_$NOW"
-    $SUDO mkdir "$(config_get MOODLE_HTDOCS)"
+    $SUDO mv "$(config_get MOODLE_WWWHTML)" "$(config_get MOODLE_WWWHTML)_$NOW"
+    $SUDO mkdir "$(config_get MOODLE_WWWHTML)"
     read -p "Change owndership? (Enter 'y' for yes, 'n' for no) : " confirmownership
     if [[ $confirmownership == 'y' ]]
     then
-        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_WWWHTML)"
     fi
-    
+
     interactive_check
-    
+
     echo "======"
     echo "Copying back config.php file"
     echo "======"
 
-    cp "$(config_get MOODLE_HTDOCS)_$NOW/config.php" "$(config_get MOODLE_HTDOCS)"/config.php
+    cp "$(config_get MOODLE_WWWHTML)_$NOW/config.php" "$(config_get MOODLE_WWWHTML)"/config.php
     interactive_check
 }
 
@@ -180,14 +180,14 @@ function enable_maintenance() # Turns Moodle maintenance mode ON
     echo '=========='
     echo "Switching on Maintenance mode"
     echo '=========='
-    $SUDO -u "$(config_get WWW_USER)" php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --enable
+    $SUDO -u "$(config_get WWW_USER)" php "$(config_get MOODLE_WWWHTML)"/admin/cli/maintenance.php --enable
 
     read -p "Change ownership? (Enter 'y' for yes, 'n' for no) : " confirmownership
     if [[ $confirmownership == 'y' ]]
     then
-        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_WWWHTML)"
     fi
-    interactive_check  
+    interactive_check
 }
 
 function disable_maintenance() # Turns Moodle maintenance mode OFF
@@ -195,11 +195,11 @@ function disable_maintenance() # Turns Moodle maintenance mode OFF
     echo '=========='
     echo "Switching off Maintenance mode"
     echo '=========='
-    php "$(config_get MOODLE_HTDOCS)"/admin/cli/maintenance.php --disable
+    php "$(config_get MOODLE_WWWHTML)"/admin/cli/maintenance.php --disable
     interactive_check
 }
 
-function sync_plugins() # Syncs the MIGRATION_DIR htdocs and moodledata folders to the MOODLE_HTDOCS and MOODLE_DATA
+function sync_plugins() # Syncs the MIGRATION_DIR plugins folder and moodledata folders to the MOODLE_WWWHTML and MOODLE_DATA
 {
     echo '=========='
     echo "Running sync_plugins()"
@@ -226,17 +226,17 @@ function sync_plugins() # Syncs the MIGRATION_DIR htdocs and moodledata folders 
     read -p "Change ownership? (Enter 'y' for yes, 'n' for no) : " confirmownership
     if [[ $confirmownership == 'y' ]]
     then
-        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_WWWHTML)"
     fi
-    
+
     interactive_check
 
     echo '=========='
     echo "Syncronising moodle_migration"
     echo '=========='
 
-    rsync -avz "$MIGRATION_DIR"/htdocs/ "$(config_get MOODLE_HTDOCS)"/
-    rsync -avz "$MIGRATION_DIR"/moodledata/lang/ "$(config_get MOODLE_DATA)"/lang/
+    rsync -avz "$MIGRATION_DIR"/www/html/ "$(config_get MOODLE_WWWHTML)"/
+    rsync -avz "$MIGRATION_DIR"/www/moodledata/lang/ "$(config_get MOODLE_DATA)"/lang/
     interactive_check
 
     echo "=========="
@@ -252,22 +252,22 @@ function sync_plugins() # Syncs the MIGRATION_DIR htdocs and moodledata folders 
     read -p "Change ownership? (Enter 'y' for yes, 'n' for no) : " confirmownership
     if [[ $confirmownership == 'y' ]]
     then
-        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_WWWHTML)"
     fi
-    
+
     interactive_check
 }
 
-function sync_release() # Rsyncs the MOODLE_VERSIONS/MOODLE_LATEST folder to MOODLE_HTDOCS
+function sync_release() # Rsyncs the MOODLE_VERSIONS/MOODLE_LATEST folder to MOODLE_WWWHTML
 {
     echo '=========='
     echo "Syncronising the lastest Moodle release"
     echo '=========='
-    rsync -avz "$(config_get MOODLE_VERSIONS)"/"$(config_get MOODLE_LATEST)"/ "$(config_get MOODLE_HTDOCS)"/
+    rsync -avz "$(config_get MOODLE_VERSIONS)"/"$(config_get MOODLE_LATEST)"/ "$(config_get MOODLE_WWWHTML)"/
     interactive_check
 }
 
-function fix_moodle_perms() # Fixes moodle permissions of MOODLE_HTDOCS
+function fix_moodle_perms() # Fixes moodle permissions of MOODLE_WWWHTML
 {
     echo '=========='
     echo "Running fix_moodle_perms()"
@@ -276,18 +276,18 @@ function fix_moodle_perms() # Fixes moodle permissions of MOODLE_HTDOCS
     read -p "Change ownership? (Enter 'y' for yes, 'n' for no) : " confirmownership
     if [[ $confirmownership == 'y' ]]
     then
-        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_HTDOCS)"
+        $SUDO chown -R "$(config_get USER)":"$(config_get WWW_USER)" "$(config_get MOODLE_WWWHTML)"
     fi
-    
-    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -exec chmod 0644 {} \;
-    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type d -exec chmod 0755 {} \;
+
+    $SUDO find "$(config_get MOODLE_WWWHTML)"/. -type f -exec chmod 0644 {} \;
+    $SUDO find "$(config_get MOODLE_WWWHTML)"/. -type d -exec chmod 0755 {} \;
 
     # These are files that need to remain executable.
-    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.darwin" -exec chmod 0755 {} \;
-    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.exe" -exec chmod 0755 {} \;
-    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.linux" -exec chmod 0755 {} \;
-    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "mimetex.freebsd" -exec chmod 0755 {} \;
-    $SUDO find "$(config_get MOODLE_HTDOCS)"/. -type f -name "algebra2tex.pl" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_WWWHTML)"/. -type f -name "mimetex.darwin" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_WWWHTML)"/. -type f -name "mimetex.exe" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_WWWHTML)"/. -type f -name "mimetex.linux" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_WWWHTML)"/. -type f -name "mimetex.freebsd" -exec chmod 0755 {} \;
+    $SUDO find "$(config_get MOODLE_WWWHTML)"/. -type f -name "algebra2tex.pl" -exec chmod 0755 {} \;
     interactive_check
 }
 
@@ -296,12 +296,12 @@ function moodle_upgrade() # Triggers the upgrade.php Moodle script'
     echo '=========='
     echo "Running Moodle upgrade"
     echo '=========='
-    
-    $SUDO php "$(config_get MOODLE_HTDOCS)"/admin/cli/upgrade.php
+
+    $SUDO php "$(config_get MOODLE_WWWHTML)"/admin/cli/upgrade.php
     interactive_check
 }
 
-function make_moodle_config() # Creates a config.php using the variables and moves it to the target htdocs directory
+function make_moodle_config() # Creates a config.php using the variables and moves it to the target apache html directory
 {
     MOODLE_CFG_DB_TYPE="$(config_get MOODLE_CFG_DB_TYPE)"
     MOODLE_CFG_DB_HOST="$(config_get MOODLE_CFG_DB_HOST)"
@@ -312,12 +312,12 @@ function make_moodle_config() # Creates a config.php using the variables and mov
     MOODLE_CFG_WWWROOT="$(config_get MOODLE_CFG_WWWROOT)"
     MOODLE_CFG_DATAROOT="$(config_get MOODLE_CFG_DATAROOT)"
     echo "Creating Moodle 'config.php'..."
-    $SUDO php ./make_moodle_config.php $MOODLE_CFG_DB_TYPE $MOODLE_CFG_DB_HOST $MOODLE_CFG_DB_NAME $MOODLE_CFG_DB_USER $MOODLE_CFG_DB_PASS $MOODLE_CFG_DB_PREF $MOODLE_CFG_WWWROOT $MOODLE_CFG_DATAROOT 
+    $SUDO php ./make_moodle_config.php $MOODLE_CFG_DB_TYPE $MOODLE_CFG_DB_HOST $MOODLE_CFG_DB_NAME $MOODLE_CFG_DB_USER $MOODLE_CFG_DB_PASS $MOODLE_CFG_DB_PREF $MOODLE_CFG_WWWROOT $MOODLE_CFG_DATAROOT
     interactive_check
     if [ -f "./config.php" ]
     then
         echo "File successfully created, moving 'config.php' to Moodle directory..."
-        mv "./config.php" "$(config_get MOODLE_HTDOCS)/config.php"
+        mv "./config.php" "$(config_get MOODLE_WWWHTML)/config.php"
         interactive_check
     fi
 }
@@ -337,7 +337,7 @@ function moodle_install() # Triggers the install_database.php Moodle script usin
     MOODLE_CFG_SHORTNAME="$(config_get MOODLE_CFG_SHORTNAME)"
     MOODLE_CFG_ADMINPASSWORD="$(config_get MOODLE_CFG_ADMINPASSWORD)"
     MOODLE_CFG_ADMINEMAIL="$(config_get MOODLE_CFG_ADMINEMAIL)"
-    php $(config_get MOODLE_HTDOCS)/admin/cli/install_database.php --agree-license --fullname=$MOODLE_CFG_SITENAME --shortname=$MOODLE_CFG_SHORTNAME --wwwroot=$MOODLE_CFG_WWWROOT --dataroot=$MOODLE_CFG_DATAROOT --dbtype=$MOODLE_CFG_DB_TYPE --dbhost=$MOODLE_CFG_DB_HOST --dbname=$MOODLE_CFG_DB_NAME --dbuser=$MOODLE_CFG_DB_USER --dbpass=$MOODLE_CFG_DB_PASS --prefix=$MOODLE_CFG_DB_PREF --adminuser=admin --adminpass=$MOODLE_CFG_ADMINPASSWORD --adminemail=$MOODLE_CFG_ADMINEMAIL
+    php $(config_get MOODLE_WWWHTML)/admin/cli/install_database.php --agree-license --fullname=$MOODLE_CFG_SITENAME --shortname=$MOODLE_CFG_SHORTNAME --wwwroot=$MOODLE_CFG_WWWROOT --dataroot=$MOODLE_CFG_DATAROOT --dbtype=$MOODLE_CFG_DB_TYPE --dbhost=$MOODLE_CFG_DB_HOST --dbname=$MOODLE_CFG_DB_NAME --dbuser=$MOODLE_CFG_DB_USER --dbpass=$MOODLE_CFG_DB_PASS --prefix=$MOODLE_CFG_DB_PREF --adminuser=admin --adminpass=$MOODLE_CFG_ADMINPASSWORD --adminemail=$MOODLE_CFG_ADMINEMAIL
     interactive_check
     # DEFAULTS we could use
     # --wwwroot=$MOODLE_CFG_WWWROOT
@@ -373,14 +373,14 @@ function configure() # Creates a new, or updates the existing config.cfg file
         if [[ $confirmcreatefile != 'y' ]]
         then
             echo "Aborting."
-            exit 1 
+            exit 1
         fi
         cp "./config.cfg.defaults config.cfg"
     fi
     echo 'Starting configuration process...'
     declare -A current_configuration
-    current_configuration=( 
-        ["MOODLE_HTDOCS"]="$(config_get MOODLE_HTDOCS)" 
+    current_configuration=(
+        ["MOODLE_WWWHTML"]="$(config_get MOODLE_WWWHTML)"
         ["MOODLE_DATA"]="$(config_get MOODLE_DATA)"
         ["MOODLE_VERSIONS"]="$(config_get MOODLE_VERSIONS)"
         ["MOODLE_LATEST"]="$(config_get MOODLE_LATEST)"
@@ -441,7 +441,7 @@ function setup_upgroodle() # Installs additional commands to be used
         then
             apt install sudo
         fi
-        
+
     fi
     echo "Running upgroodle setup, this will first run 'sudo apt update'."
     read -p "Press Enter to continue "
@@ -449,9 +449,9 @@ function setup_upgroodle() # Installs additional commands to be used
     required_pkgs=(
         "grep"
         "head"
-        "rsync" 
-        "wget" 
-        "zip" 
+        "rsync"
+        "wget"
+        "zip"
         "sed"
         )
     for pkg in "${required_pkgs[@]}"; do

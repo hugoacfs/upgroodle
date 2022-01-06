@@ -33,7 +33,7 @@ Upgroodle should fetch the previous config.php file for you, but if you wish to 
 The configuration file contains two types of variables, upgroodle variables, used to navigate the file system and Moodle configuration variables, used to create a Moodle configuration file.
 
 ### Upgroodle Variables [**required**]
-- MOODLE_HTDOCS -> directory path where moodle will be installed
+- MOODLE_WWWHTML -> directory path where moodle will be installed
 - MOODLE_DATA -> directory path where moodledata is
 - MOODLE_VERSIONS -> moodle versions directory where core moodle is downloaded to
 - MOODLE_LATEST -> desired moodle directory to be used in the install (moodle-38 for example) can be left as **'latest'** for latest download
@@ -65,7 +65,7 @@ There are two main ways to use this script, the simple method and the advanced m
 This method is used for letting the script handle most of the upgrade. Simple method is documented, simply run `./upgroodle.sh.sh` to get help.
 
 ### Advanced Method
-This method allows the user to call individual functions from the script library to do things. Useful for debugging and other tasks rather than upgrade/install. 
+This method allows the user to call individual functions from the script library to do things. Useful for debugging and other tasks rather than upgrade/install.
 Usage: `./upgroodle.sh.sh -d 'function_name' (+ other parameters needed by function)`
 Example: `./upgroodle.sh.sh -d get_moodle -v 38 -r 3.8.4`
 

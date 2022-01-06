@@ -1,10 +1,10 @@
-MOODLE_HTDOCS=/var/www/html
+MOODLE_WWWHTML=/var/www/html
 MOODLE_DATA=/var/www/moodledata
 MOODLE_VERSIONS=./moodle_versions
 MOODLE_LATEST=latest
 USER=root
 WWW_USER=www-data
-MIGRATION_DIR=../moodle
+MIGRATION_DIR=../moodle_migration
 MOODLE_CFG_DB_TYPE=mariadb
 MOODLE_CFG_DB_HOST=localhost
 MOODLE_CFG_DB_NAME=moodle
